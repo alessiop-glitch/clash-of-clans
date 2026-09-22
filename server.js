@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Permette le connessioni da GitHub Pages
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
@@ -18,19 +18,15 @@ let pendingPurchases = [];
 let playerVillages = {};
 
 io.on('connection', (socket) => {
-    console.log('Un giocatore o admin si è connesso:', socket.id);
+    console.log('Nuova connessione:', socket.id);
 
-    // Caricamento / Salvataggio Villaggio
+    // Caricamento Dati Villaggio
     socket.on('loadVillage', (username) => {
         const data = playerVillages[username] || { gold: 500, gems: 50, buildings: [] };
         socket.emit('villageData', data);
     });
 
-    socket.on('saveVillage', (data) => {
-        playerVillages[data.username] = data.village;
-    });
-
-    // Richiesta d'acquisto dal Negozio dell'iPad
+    // Richiesta Acquisto dal Giocatore
     socket.on('requestPurchase', (data) => {
         const newPurchase = {
             id: 'ORD-' + Date.now(),
@@ -42,11 +38,8 @@ io.on('connection', (socket) => {
         };
         pendingPurchases.push(newPurchase);
 
-        // Avvisa l'iPad che la richiesta è in attesa
         socket.emit('purchaseStatus', { status: 'PENDING', message: 'In attesa di approvazione da alessiopuzzolo...' });
-
-        // Notifica l'Admin in tempo reale
-        io.to('admin_room').emit('newPurchaseRequest', newPurchase);
+        io.to('admin_room').emit('pendingList', pendingPurchases.filter(p => p.status === 'PENDING'));
     });
 
     // Autenticazione Admin (alessiopuzzolo)
@@ -57,22 +50,31 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Decisione dell'Admin (Accetta / Rifiuta)
+    // Risposta dell'Admin (Accetta / Rifiuta)
     socket.on('processPurchase', (data) => {
         const purchase = pendingPurchases.find(p => p.id === data.purchaseId);
         if (!purchase) return;
 
         if (data.action === 'APPROVE') {
             purchase.status = 'APPROVED';
-            io.to(purchase.socketId).emit('purchaseStatus', { status: 'APPROVED', item: purchase.item, amount: purchase.amount });
+            io.to(purchase.socketId).emit('purchaseStatus', {
+                status: 'APPROVED',
+                item: purchase.item,
+                amount: purchase.amount,
+                message: 'Acquisto APPROVATO da alessiopuzzolo!'
+            });
         } else {
             purchase.status = 'REJECTED';
-            io.to(purchase.socketId).emit('purchaseStatus', { status: 'REJECTED', message: 'Acquisto rifiutato dall\'amministratore.' });
+            io.to(purchase.socketId).emit('purchaseStatus', {
+                status: 'REJECTED',
+                message: 'Acquisto RIFIUTATO da alessiopuzzolo.'
+            });
         }
 
+        pendingPurchases = pendingPurchases.filter(p => p.id !== data.purchaseId);
         io.to('admin_room').emit('pendingList', pendingPurchases.filter(p => p.status === 'PENDING'));
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server attivo sulla porta ${PORT}`));
+server.listen(PORT, () => console.log(`Server avviato sulla porta ${PORT}`));
