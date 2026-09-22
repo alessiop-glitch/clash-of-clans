@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Clash of Clans Web</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Phaser 3 e Socket.io CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Interfaccia Sovrapposta (UI) -->
+    <div id="ui-container">
+        <div id="resources-bar">
+            <div class="resource"><span class="icon">🪙</span> Oro: <span id="gold-count">500</span></div>
+            <div class="resource"><span class="icon">💎</span> Gemme: <span id="gems-count">50</span></div>
+        </div>
+
+        <button id="shop-btn" onclick="toggleShop()">🏪 Negozio</button>
+    </div>
+
+    <!-- Modal Negozio Acquisti -->
+    <div id="shop-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Negozio del Villaggio</h2>
+            <p>Gli acquisti richiedono l'approvazione dell'amministratore (alessiopuzzolo).</p>
+
+            <div class="shop-item">
+                <span>📦 Sacchetto Gemme (+100 💎)</span>
+                <button onclick="buyItem('100 Gemme', 100)">Richiedi</button>
+            </div>
+            <div class="shop-item">
+                <span>🏰 Caserma di Livello 2</span>
+                <button onclick="buyItem('Caserma Lvl 2', 1)">Richiedi</button>
+            </div>
+
+            <button class="close-btn" onclick="toggleShop()">Chiudi</button>
+        </div>
+    </div>
+
+    <!-- Notifica Stato Acquisto -->
+    <div id="status-toast" class="toast" style="display:none;"></div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>
